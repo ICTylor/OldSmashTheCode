@@ -6,6 +6,17 @@
         xmlns:local="clr-namespace:SmashTheCode"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid Name="grid" Loaded="Grid_Loaded">
-    </Grid>
+    <UniformGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Columns="3">
+        <Grid Name="grid" Loaded="Grid_Loaded" Margin="0,0,10,0">
+        </Grid>
+        <Grid x:Name="gridScore" Loaded="gridScore_Loaded" Margin="0,0,0,0">
+            <Label x:Name="nuissance1" Content="0" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+            <Label x:Name="nuissance2" Content="0" HorizontalAlignment="Left" Margin="124,10,0,0" VerticalAlignment="Top"/>
+            <Label x:Name="score1" Content="Score: 0" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+            <Label x:Name="score2" Content="Score: 0" HorizontalAlignment="Left" Margin="114,41,0,0" VerticalAlignment="Top"/>
+
+        </Grid>
+        <Grid Name="grid2" Loaded="grid2_Loaded" Margin="10,0,0,0">
+        </Grid>
+    </UniformGrid>
 </Window>

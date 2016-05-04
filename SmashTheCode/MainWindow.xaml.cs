@@ -189,19 +189,6 @@ namespace SmashTheCode
             DropPair(state.NextPairs[0], col);
             bool changesInState = true;
             int currentChain = 1;
-            int[] expectedFiveCombo = new int[] {
-            -1,-1,-1,-1,-1,-1,
-            -1,-1,-1,-1,-1,-1,
-            -1,-1,-1,-1,-1,-1,
-            -1,-1,-1,-1,-1,-1,
-            -1,-1,-1,-1,-1,-1,
-            -1,-1,-1, 0,-1,-1,
-            -1,-1,-1, 1,-1,-1,
-            -1,-1, 0, 1,-1,-1,
-            -1,-1, 5, 2,-1,-1,
-            -1,-1, 5, 2,-1,-1,
-             4, 5, 4, 3, 4,-1,
-             4, 5, 4, 3, 4,-1};
             while (changesInState) {
                 changesInState = false;
                 var allConnected = GetAllConnected();
@@ -218,15 +205,10 @@ namespace SmashTheCode
                         state.PlayerScore += 10 * item.Count * ScorePower[currentChain-1];
                     }
                 }
-                //920(1),1 4+1, 960(1),2 4+3, 1280(6), 3 4+1, 1920(15),4 4+2, 3200(33), 5 4+1, 5760(70)
-                //1,2,3,4,5
-                //0,5,9,18,37
-                //40,320,640,1280,2560
                 if (changesInState)
                 {
                     state.EnemyNuissance += ChainPower[currentChain - 1];
                     ApplyGravity();
-                    bool isEqual = state.PlayerGameboard.SequenceEqual(expectedFiveCombo);
                     currentChain++;
                 }
             }
@@ -304,77 +286,6 @@ namespace SmashTheCode
             return true;
         }
 
-        /*public bool DropPairOptimized(Tuple<int, int> pair, int col)
-        {
-            int i = 0;
-            for (i = 0; i < 12; i++)
-            {
-                if (state.PlayerGameboard[col + i * 6] != -1)
-                {
-                    break;
-                }
-            }
-            int highestColorColumn = state.PlayerGameboard[col + i * 6];
-            i = i - 1;
-            int leftNeighbor = -1;
-            int diagLeftNeighbor = -1;
-            if (col > 0) {
-                leftNeighbor = state.PlayerGameboard[col - 1 + i * 6];
-                if (i > 0)
-                {
-                    diagLeftNeighbor = state.PlayerGameboard[col - 1 + (i - 1) * 6];
-                }
-            }
-            int rightNeighbor = -1;
-            int diagRightNeighbor = -1;
-            if (col < 5)
-            {
-                rightNeighbor = state.PlayerGameboard[col + 1 + i * 6];
-                if (i < 0)
-                {
-                    diagRightNeighbor = state.PlayerGameboard[col + 1 + (i - 1) * 6];
-                }
-            }
-            int bottomNeighbor = -1;
-            if (i < 11)
-            {
-                bottomNeighbor = state.PlayerGameboard[col + (i + 1) * 6];
-            }
-            if ((bottomNeighbor == pair.Item2) || (leftNeighbor == pair.Item2) || (rightNeighbor == pair.Item2))
-            {
-                List<Tuple<int,int>> cells = GetConnected(col, i, new List<Tuple<int, int>>());
-                if (cells.Count>3){
-                    //Erase and check for combo
-                    RemoveConnected(cells);
-                    ApplyGravity();
-                    for(i = 0; i < 12; i++)
-                    {
-                        for(int j = 0; j < 6; j++)
-                        {
-                            if (state.PlayerGameboard[j + (i + 1) * 6] != -1)
-                            {
-                                List<Tuple<int, int>> comboConnected = GetConnected(col, i, new List<Tuple<int, int>>());
-
-                            }
-                        }
-                    }
-                }
-                return true;
-            }
-            if ((diagLeftNeighbor == pair.Item1) || (diagRightNeighbor == pair.Item1))
-            {
-                List<Tuple<int, int>> cells = GetConnected(col, i-1, new List<Tuple<int, int>>());
-                if (cells.Count > 3)
-                {
-                    //Erase and check for combo
-                    RemoveConnected(cells);
-                    ApplyGravity();
-                }
-                return true;
-            }
-            return true;
-        }*/
-
         public Tuple<State,Reward> ProcessAction()
         {
             Tuple<State,Reward> output = new Tuple<State, Reward>(new State(), new Reward());
@@ -388,9 +299,11 @@ namespace SmashTheCode
     /// </summary>
     public partial class MainWindow : Window
     {
+        Enviroment env = new Enviroment();
         public MainWindow()
         {
             InitializeComponent();
+             
             for (int i = 0; i < 12; i++)
             {
                 RowDefinition rowDefinition = new RowDefinition();
@@ -405,23 +318,106 @@ namespace SmashTheCode
                 columnDefinition.Width = new GridLength(1, GridUnitType.Star);
                 grid.ColumnDefinitions.Add(columnDefinition);
             }
+            for (int i = 0; i < 12; i++)
+            {
+                RowDefinition rowDefinition = new RowDefinition();
+                //rowDefinition.Height = GridLength.Auto;
+                rowDefinition.Height = new GridLength(1, GridUnitType.Star);
+                grid2.RowDefinitions.Add(rowDefinition);
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                ColumnDefinition columnDefinition = new ColumnDefinition();
+                ///columnDefinition.Width = GridLength.Auto;
+                columnDefinition.Width = new GridLength(1, GridUnitType.Star);
+                grid2.ColumnDefinitions.Add(columnDefinition);
+            }
         }
 
         private void Grid_Loaded(object sender, RoutedEventArgs e)
         {
             Grid grid = sender as Grid;
+            grid.Background = Brushes.DarkGray;
             for (int i=0; i < 12; i++)
             {
                 for (int j=0; j < 6; j++)
                 {
-                    Rectangle rectangle = new Rectangle();
-                    rectangle.Fill = Brushes.Gray;
-                    rectangle.Margin = new Thickness(2);
-                    grid.Children.Add(rectangle);
-                    Grid.SetRow(rectangle, i);
-                    Grid.SetColumn(rectangle, j);
+                    TextBlock textBlock = new TextBlock();
+                    textBlock.Background = Brushes.Gray;
+                    textBlock.TextAlignment = TextAlignment.Center;
+                    textBlock.VerticalAlignment = VerticalAlignment.Center;
+                    textBlock.Margin = new Thickness(2);
+                    textBlock.Text = "-1";
+                    textBlock.SetBinding(TextBlock.TextProperty, new Binding()
+                    {
+                        Path = new PropertyPath("state.PlayerGameboard["+(j+i*6)+"]"),
+                        Source = this.env
+                    });
+                    textBlock.DataContext = this.env;
+                    grid.Children.Add(textBlock);
+                    Grid.SetRow(textBlock, i);
+                    Grid.SetColumn(textBlock, j);
                 }
             }
+            int[] initialStateEmpty = new int[] {
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1};
+            env.state.PlayerGameboard = initialStateEmpty;
+        }
+
+        private void grid2_Loaded(object sender, RoutedEventArgs e)
+        {
+            Grid grid = sender as Grid;
+            for (int i = 0; i < 12; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    TextBlock textBlock = new TextBlock();
+                    textBlock.Background = Brushes.Gray;
+                    textBlock.TextAlignment = TextAlignment.Center;
+                    textBlock.VerticalAlignment = VerticalAlignment.Center;
+                    textBlock.Margin = new Thickness(2);
+                    textBlock.Text = "-1";
+                    textBlock.SetBinding(TextBlock.TextProperty, new Binding()
+                    {
+                        Path = new PropertyPath("state.EnemyGameboard[" + (j + i * 6) + "]"),
+                        Source = this.env
+                    });
+                    textBlock.DataContext = this.env;
+                    grid.Children.Add(textBlock);
+                    Grid.SetRow(textBlock, i);
+                    Grid.SetColumn(textBlock, j);
+                }
+            }
+            int[] initialStateEmpty = new int[] {
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1,
+            -1,-1,-1,-1,-1,-1};
+            env.state.PlayerGameboard = initialStateEmpty;
+        }
+
+        private void gridScore_Loaded(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
