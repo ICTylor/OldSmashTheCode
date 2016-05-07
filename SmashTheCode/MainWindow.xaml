@@ -14,7 +14,16 @@
             <Label x:Name="nuissance2" Content="0" HorizontalAlignment="Left" Margin="124,10,0,0" VerticalAlignment="Top"/>
             <Label x:Name="score1" Content="Score: 0" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
             <Label x:Name="score2" Content="Score: 0" HorizontalAlignment="Left" Margin="114,41,0,0" VerticalAlignment="Top"/>
-
+            <UniformGrid Columns="8" Margin="10,87,10,171" RenderTransformOrigin="0.504,0.268" Loaded="UniformGrid_Loaded">
+                <UniformGrid Rows="2">
+                    <TextBlock>
+                        -1
+                    </TextBlock>
+                    <TextBlock>
+                        -1
+                    </TextBlock>
+                </UniformGrid>
+            </UniformGrid>
         </Grid>
         <Grid Name="grid2" Loaded="grid2_Loaded" Margin="10,0,0,0">
         </Grid>
