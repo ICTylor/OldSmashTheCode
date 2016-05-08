@@ -21,7 +21,7 @@ namespace SmashTheCode
     {
         public int[,] Gameboard { get; set; } = new int[12, 6];
         public int Score { get; set; } = 0;
-        public int Nuissance { get; set; } = 0;
+        public float Nuissance { get; set; } = 0.0f;
     }
 
     public class State
@@ -29,18 +29,41 @@ namespace SmashTheCode
         public Player[] Players { get; set; } = new Player[2];
         public int Turn { get; set; } = 0;
         public PearlPair[] NextPairs { get; set; } = new PearlPair[8];
-        public int CurrentPlayer = 0;
+        public int CurrentPlayer { get; set; } = 0;
+        public Random RandomGenerator { get; set; } = new Random(); 
 
         public State()
         {
             Players[0] = new Player();
             Players[1] = new Player();
+            for (int i = 0;i<8; i++)
+            {
+                NextPairs[i] = GetRandomPair();
+            }
+            foreach (var player in Players)
+            {
+                for (int row = 0; row < 12; row++)
+                {
+                    for (int col = 0; col < 6; col++)
+                    {
+                        player.Gameboard[row, col] = -1;
+                    }
+                }
+            }
+        }
+        public PearlPair GetRandomPair()
+        {
+            int color = (int)Math.Truncate(RandomGenerator.NextDouble() * 5 + 1.0);
+            var colorsPair = new Tuple<int, int>(color, color);
+            return new PearlPair(colorsPair, 0);
         }
     }
     public class Environment
     {
         public State state { get; set; } = new State();
-        public int[] ChainPower { get; set; } = { 0, 5, 9, 18, 37, 100, 100, 100, 100, 100, 100 };
+        public int[] ChainPower { get; set; } = { 0, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+        public int[] ColorBonus { get; set; } = { 0, 2, 4, 8, 16 };
+        public int[] GroupBonus { get; set; } = { 0, 1, 2, 3, 4, 5, 6, 8 };
         public int[] ScorePower { get; set; } = { 1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
         public List<Tuple<int, int>> GetConnected(int row, int col, List<Tuple<int, int>> discovered)
         {
@@ -177,42 +200,71 @@ namespace SmashTheCode
             return result;
         }
 
-        public void ProcessMove(int col)
+        public bool ProcessMove(int rotation, int column)
         {
-            DropPair(state.NextPairs[0], col);
+            state.NextPairs[0].Rotation = rotation;
+            bool valid = ProcessMove(column);
+            state.NextPairs[0].Rotation = 0;
+            return valid;
+        }
+
+        public bool ProcessMove(int col)
+        {
+            if (!DropPair(state.NextPairs[0], col)) return false;
+            var newNextPairs = state.NextPairs.Skip(1).ToList();
+            newNextPairs.Add(state.GetRandomPair());
+            state.NextPairs = newNextPairs.ToArray();
             bool changesInState = true;
             int currentChain = 1;
             while (changesInState)
             {
+                int stepScore = 0;
                 changesInState = false;
                 var allConnected = GetAllConnected();
                 var removable = allConnected.Where(x => x.Count > 3).ToList();
+                int differentColors = -1;
+                int groupN = 0;
+                List<int> colorsUsed = new List<int>();
                 foreach (var item in removable)
                 {
                     var first = item.First();
                     int firstItemRow = first.Item1;
                     int firstItemCol = first.Item2;
-                    if (state.Players[state.CurrentPlayer].Gameboard[firstItemRow,firstItemCol] != 0)
+                    int color = state.Players[state.CurrentPlayer].Gameboard[firstItemRow, firstItemCol];
+                    
+                    if (color != 0)
                     {
+                        if (!colorsUsed.Contains(color))
+                        {
+                            differentColors++;
+                            colorsUsed.Add(color);
+                        }
+                        groupN += item.Count;
                         changesInState = true;
                         RemoveConnected(item);
-                        state.Players[state.CurrentPlayer].Score += 10 * item.Count * ScorePower[currentChain - 1];
+                        int bonus = (ChainPower[currentChain - 1] + ColorBonus[differentColors] + GroupBonus[groupN - 4]);
+                        bonus = Math.Min(Math.Max(1, bonus),999);
+                        stepScore += (10 * item.Count) * bonus;
+                        state.Players[state.CurrentPlayer].Score += (10 * item.Count) * bonus;
                     }
                 }
                 if (changesInState)
                 {
-                    state.Players[state.CurrentPlayer+1].Nuissance += ChainPower[currentChain - 1];
                     ApplyGravity();
                     currentChain++;
                 }
+                //Not like this
+                state.Players[state.CurrentPlayer + 1].Nuissance += stepScore/70.0f;
             }
             DropNuissance();
+            return true;
         }
 
         public bool DropNuissance()
         {
-            int remainingNuissance = 0;
-            int rowsToDrop = Math.DivRem(state.Players[state.CurrentPlayer].Nuissance, 6, out remainingNuissance);
+            float remainingNuissance = 0;
+            int rowsToDrop = (int)Math.Truncate(state.Players[state.CurrentPlayer].Nuissance / 6.0f);
+            remainingNuissance = state.Players[state.CurrentPlayer].Nuissance - rowsToDrop * 6;
             state.Players[state.CurrentPlayer].Nuissance = remainingNuissance;
             for (int col = 0; col < 6; col++)
             {
@@ -269,35 +321,32 @@ namespace SmashTheCode
                     break;
                 }
             }
-            if (row < 2)
+            switch (pair.Rotation)
             {
-                return false;
+                case 3:
+                    if (row < 2) return false;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 2, col] = pair.Colors.Item1;
+                    break;
+                case 0://Careful col limits
+                    if (col > 4) return false;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 1, col + 1] = pair.Colors.Item1;
+                    break;
+                case 1:
+                    if (row < 2) return false;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item1;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 2, col] = pair.Colors.Item2;
+                    break;
+                case 2://Careful col limits
+                    if (col < 1) return false;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
+                    state.Players[state.CurrentPlayer].Gameboard[row - 1, col - 1] = pair.Colors.Item1;
+                    break;
+                default:
+                    break;
             }
-            else
-            {
-                switch (pair.Rotation)
-                {
-                    case 0:
-                        state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
-                        state.Players[state.CurrentPlayer].Gameboard[row - 2, col] = pair.Colors.Item1;
-                        break;
-                    case 1:
-                        state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
-                        state.Players[state.CurrentPlayer].Gameboard[row - 1, col+1] = pair.Colors.Item1;
-                        break;
-                    case 2:
-                        state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item1;
-                        state.Players[state.CurrentPlayer].Gameboard[row - 2, col] = pair.Colors.Item2;
-                        break;
-                    case 3:
-                        state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
-                        state.Players[state.CurrentPlayer].Gameboard[row - 1, col - 1] = pair.Colors.Item1;
-                        break;
-                    default:
-                        break;
-                }
-                ApplyGravity();
-            }
+            ApplyGravity();
             return true;
         }
     }

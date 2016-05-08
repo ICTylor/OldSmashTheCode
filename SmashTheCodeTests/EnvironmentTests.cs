@@ -202,11 +202,11 @@ namespace SmashTheCode.Tests
             { -1, 3,-1,-1,-1,-1 } };
             int[,] expectedStateFull = initialStateFull;
             env.state.Players[env.state.CurrentPlayer].Gameboard = initialStateEmpty;
-            bool okMove = env.DropPair(new PearlPair(new Tuple<int, int>(2, 2),0), 2);
+            bool okMove = env.DropPair(new PearlPair(new Tuple<int, int>(2, 2),3), 2);
             Assert.IsTrue(okMove);
             CollectionAssert.AreEqual(expectedStateEmpty, env.state.Players[env.state.CurrentPlayer].Gameboard);
             env.state.Players[env.state.CurrentPlayer].Gameboard = initialStateFull;
-            okMove = env.DropPair(new PearlPair(new Tuple<int, int>(2, 2),0), 1);
+            okMove = env.DropPair(new PearlPair(new Tuple<int, int>(2, 2),3), 1);
             Assert.IsFalse(okMove);
             CollectionAssert.AreEqual(expectedStateFull, env.state.Players[env.state.CurrentPlayer].Gameboard);
         }
@@ -256,9 +256,9 @@ namespace SmashTheCode.Tests
             env.state.Players[env.state.CurrentPlayer].Score = 920;
             env.state.Players[env.state.CurrentPlayer + 1].Nuissance = 1;
             env.state.Players[env.state.CurrentPlayer + 1].Score = 880;
-            env.ProcessMove(col);
+            env.ProcessMove(3,col);
             CollectionAssert.AreEqual(expectedFiveCombo, env.state.Players[env.state.CurrentPlayer].Gameboard);
-            Assert.AreEqual(70, env.state.Players[env.state.CurrentPlayer+1].Nuissance);
+            Assert.AreEqual(70, (int)Math.Truncate(env.state.Players[env.state.CurrentPlayer+1].Nuissance));
             Assert.AreEqual(5760, env.state.Players[env.state.CurrentPlayer].Score);
         }
 

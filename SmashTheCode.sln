@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmashTheCode", "SmashTheCod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmashTheCodeTests", "SmashTheCodeTests\SmashTheCodeTests.csproj", "{479FC380-245A-4EE2-96B4-50F032346C66}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSmashTheCode", "ConsoleSmashTheCode\ConsoleSmashTheCode.csproj", "{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{479FC380-245A-4EE2-96B4-50F032346C66}.Release|Any CPU.Build.0 = Release|Any CPU
 		{479FC380-245A-4EE2-96B4-50F032346C66}.Release|x64.ActiveCfg = Release|x64
 		{479FC380-245A-4EE2-96B4-50F032346C66}.Release|x64.Build.0 = Release|x64
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Debug|x64.Build.0 = Debug|Any CPU
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Release|x64.ActiveCfg = Release|Any CPU
+		{5B1C9F24-1B5C-43F8-8BD9-883D080CF038}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

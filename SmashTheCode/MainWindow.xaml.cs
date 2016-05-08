@@ -53,6 +53,7 @@ namespace SmashTheCode
         public MainWindow()
         {
             InitializeComponent();
+            PuyoConsole.main(null);
              
             for (int i = 0; i < 12; i++)
             {
