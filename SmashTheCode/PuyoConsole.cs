@@ -27,7 +27,7 @@ namespace SmashTheCode
                 {
                     builder.AppendFormat("{0} ", "_");
                 }
-                for (int i = 0; i < Math.Abs(nuissance-freeNuissance); i++)
+                for (int i = 0; i < nuissance; i++)
                 {
                     builder.AppendFormat("{0} ", "0");
                 }

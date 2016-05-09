@@ -48,10 +48,20 @@ namespace SmashTheCode.Tests
             env.state.Players[env.state.CurrentPlayer+1].Nuissance = 14;
             env.state.Players[env.state.CurrentPlayer].Score = 0;
             env.state.Players[env.state.CurrentPlayer+1].Score = 200;
+            StringBuilder builderTopNextPairs = new StringBuilder();
+            StringBuilder builderBotNextPairs = new StringBuilder();
+            for (int i = 0; i < 8; i++)
+            {
+                builderTopNextPairs.AppendFormat("{0:D} ",env.state.NextPairs[i].Colors.Item1);
+                builderBotNextPairs.AppendFormat("{0:D} ",env.state.NextPairs[i].Colors.Item2);
+            }
+            builderTopNextPairs.Append("\n");
+            builderBotNextPairs.Append("\n");
+
             var puyoConsole = new PuyoConsole();
             string result = puyoConsole.OutputEnvironment(env);
             string expected =
-                "PLAYER 1 \n" + 
+                "PLAYER 1 \n" +
                 "SCORE: 0000000 \n" +
                 "NUISSANCE: 002 \n" +
                 "_ _ _ _ 0 0 \n" +
@@ -82,8 +92,10 @@ namespace SmashTheCode.Tests
                 ". . . . . . \n" +
                 ". . . 0 . . \n" +
                 "2 . . 0 . . \n" +
-                "2 . 2 2 . 3 \n"
-                ;
+                "2 . 2 2 . 3 \n" +
+                builderTopNextPairs.ToString() +
+                builderBotNextPairs.ToString()
+            ;
             Assert.AreEqual(expected, result);
         }
     }
