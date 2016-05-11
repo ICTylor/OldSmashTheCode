@@ -15,27 +15,6 @@ using System.Windows.Shapes;
 
 namespace SmashTheCode
 {
-    public class Reward
-    {
-        public int R{ get; set; } = 0;
-    }
-    public class Action
-    {
-        public int Col { get; set; } = 0;
-    }
-    public class Agent
-    {
-        public Action Act(State s, Reward r)
-        {
-            Action action = new Action();
-            return action;
-        }
-    }
-
-    public class Policy
-    {
-        public int[] PossibleMoves { get; set; } = new int[6];
-    }
 
     /*public Tuple<State, Reward> ProcessAction()
     {

@@ -15,6 +15,18 @@ namespace SmashTheCode
             Colors = colors;
             Rotation = rotation;
         }
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                // Suitable nullity checks etc, of course :)
+                hash = hash * 486187739 + Colors.Item1;
+                hash = hash * 486187739 + Colors.Item2;
+                hash = hash * 486187739 + Rotation.GetHashCode();
+                return hash;
+            }
+        }
     }
 
     public class Player
@@ -22,6 +34,25 @@ namespace SmashTheCode
         public int[,] Gameboard { get; set; } = new int[12, 6];
         public int Score { get; set; } = 0;
         public float Nuissance { get; set; } = 0.0f;
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                // Suitable nullity checks etc, of course :)
+                for(int row = 0; row<12; row++)
+                {
+                    for(int col = 0; col<6; col++)
+                    {
+                        hash = hash * 486187739 + Gameboard[row, col];
+                    }
+                }
+                hash = hash * 486187739 + Gameboard.GetHashCode();
+                hash = hash * 486187739 + Score.GetHashCode();
+                hash = hash * 486187739 + Nuissance.GetHashCode();
+                return hash;
+            }
+        }
     }
 
     public class State
@@ -49,6 +80,25 @@ namespace SmashTheCode
                         player.Gameboard[row, col] = -1;
                     }
                 }
+            }
+        }
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                // Suitable nullity checks etc, of course :)
+                foreach (var player in Players)
+                {
+                    hash = hash * 486187739 + player.GetHashCode();
+                }
+                hash = hash * 486187739 + Turn.GetHashCode();
+                foreach (var pair in NextPairs)
+                {
+                    hash = hash * 486187739 + pair.GetHashCode();
+                }
+                
+                return hash;
             }
         }
         public PearlPair GetRandomPair()
@@ -208,6 +258,22 @@ namespace SmashTheCode
             return valid;
         }
 
+        public ReinforcementLearning.Reward TakeAction(ReinforcementLearning.Action action)
+        {
+            int scoreBefore = state.Players[state.CurrentPlayer].Score;
+            bool valid = ProcessMove(action.Rotation, action.Column);
+            if (!valid)
+            {
+                return new ReinforcementLearning.Reward(-100000);
+            }
+            else
+            {
+                int scoreAfter = state.Players[state.CurrentPlayer].Score;
+                int deltaScore = scoreAfter - scoreBefore;
+                return new ReinforcementLearning.Reward(deltaScore);
+            }
+        }
+
         public bool ProcessMove(int col)
         {
             if (!DropPair(state.NextPairs[0], col)) return false;
@@ -254,7 +320,7 @@ namespace SmashTheCode
                     currentChain++;
                 }
                 //Not like this
-                state.Players[state.CurrentPlayer + 1].Nuissance += stepScore/70.0f;
+                state.Players[(state.CurrentPlayer + 1) % 2].Nuissance += stepScore/70.0f;
             }
             DropNuissance();
             return true;

@@ -125,9 +125,16 @@ namespace SmashTheCode
         {
             Environment env = new Environment();
             env.state = new State();
+            ReinforcementLearning.RandomAgent randomAgent = new ReinforcementLearning.RandomAgent();
             OutputEnvironment(env);
-            while (true) { 
-                InputEnvironment(env);
+            while (true) {
+                if (env.state.CurrentPlayer == 0) {
+                    InputEnvironment(env);
+                }else{
+                    var action = randomAgent.Act(env.state);
+                    env.ProcessMove(action.Rotation, action.Rotation);
+                }
+                env.state.CurrentPlayer = (env.state.CurrentPlayer + 1) % 2;
                 OutputEnvironment(env);
             }
         }
