@@ -123,19 +123,92 @@ namespace SmashTheCode
         }
         public void Gameloop()
         {
-            Environment env = new Environment();
-            env.state = new State();
-            ReinforcementLearning.RandomAgent randomAgent = new ReinforcementLearning.RandomAgent();
-            OutputEnvironment(env);
-            while (true) {
-                if (env.state.CurrentPlayer == 0) {
-                    InputEnvironment(env);
-                }else{
-                    var action = randomAgent.Act(env.state);
-                    env.ProcessMove(action.Rotation, action.Rotation);
+            ReinforcementLearning.Experience experience = new ReinforcementLearning.Experience();
+            ReinforcementLearning.RandomAgent randomAgent1 = new ReinforcementLearning.RandomAgent();
+            randomAgent1.SetSeed(1);
+            ReinforcementLearning.Agent agent1 = new ReinforcementLearning.Agent();
+            ReinforcementLearning.Agent agent2 = new ReinforcementLearning.Agent();
+            float accumulatedReward = 0f;
+            int episodesAccumulated = 0;
+            int accumulatedTurns = 0;
+            int accumulatedScore = 0;
+            while (true) { 
+                Environment env = new Environment();
+                env.state = new State();
+                //OutputEnvironment(env);
+                StringBuilder builder = new StringBuilder();
+                while (!env.state.Winner.HasValue) {
+                    if (env.state.CurrentPlayer == 0) {
+                        ReinforcementLearning.Action action1;
+                        if (episodesAccumulated < 10)
+                        {
+                            action1 = randomAgent1.Act(env.state);
+                        }
+                        else
+                        {
+                            action1 = agent1.Act(env.state);
+                        }
+                        env.ProcessMove(action1.Rotation, action1.Column);
+                        builder.AppendFormat("Agent {0:D} takes action Rot:{1:D} Col:{2:D}", env.state.CurrentPlayer + 1, action1.Rotation, action1.Column);
+
+                        //InputEnvironment(env);
+                    }
+                    else{
+                        var action2 = agent2.Act(env.state);
+                        experience.OldState = env.state;
+                        experience.Action = action2;
+                        //env.ProcessMove(action2.Rotation, action2.Column);
+                        ReinforcementLearning.Reward reward = env.TakeAction(action2);
+                        experience.NewState = env.state;
+                        experience.Reward = reward;
+                        accumulatedReward += reward.R;
+                        agent2.LearningAlgorithm.UpdateQ(experience);
+                        builder.AppendFormat("Agent {0:D} takes action Rot:{1:D} Col:{2:D}", env.state.CurrentPlayer + 1, action2.Rotation, action2.Column);
+                    }
+                    env.state.CurrentPlayer = (env.state.CurrentPlayer + 1) % 2;
+                    //System.Console.WriteLine(builder.ToString());
+                    builder.Clear();
+                    //OutputEnvironment(env);
                 }
-                env.state.CurrentPlayer = (env.state.CurrentPlayer + 1) % 2;
-                OutputEnvironment(env);
+                if (env.state.Winner.Value == 1)
+                {
+                    experience.NewState = env.state;
+                    ReinforcementLearning.Reward reward = new ReinforcementLearning.Reward(1);
+                    experience.Reward = reward;
+                    accumulatedReward += reward.R;
+                }
+                accumulatedScore += env.state.Players[1].Score;
+                accumulatedTurns += env.state.Turn;
+                //System.Console.WriteLine("Player "+(env.state.Winner.Value + 1)+" wins!");
+                //System.Console.WriteLine("Accumulated reward: " + accumulatedReward);
+                //System.Console.WriteLine("Current score: " + env.state.Players[1].Score);
+                //System.Console.WriteLine("Current turn: " + env.state.Turn);
+                episodesAccumulated += 1;
+                if ((episodesAccumulated % 100)==0)
+                {
+                    agent1.LearningAlgorithm.Q = (float[,])agent2.LearningAlgorithm.Q.Clone();
+                    if((episodesAccumulated % 1000) == 0)
+                    {
+                        System.Console.WriteLine("Accumulated reward: " + accumulatedReward);
+                        System.Console.WriteLine("Mean score: " + (float)accumulatedScore / episodesAccumulated);
+                        System.Console.WriteLine("Mean turns: " + (float)accumulatedTurns / episodesAccumulated);
+                        System.Console.WriteLine("Exploration factor: " + agent2.LearningAlgorithm.ExplorationFactor);
+                        System.Console.WriteLine("Discount factor: " + agent2.LearningAlgorithm.DiscountFactor);
+                    }
+
+                    if (agent2.LearningAlgorithm.ExplorationFactor > 0.01)
+                    {
+                        agent2.LearningAlgorithm.ExplorationFactor *= 0.99f;
+                    }
+                    agent1.LearningAlgorithm.ExplorationFactor = agent2.LearningAlgorithm.ExplorationFactor;
+
+                    if (agent2.LearningAlgorithm.DiscountFactor < 0.95)
+                    {
+                        agent2.LearningAlgorithm.DiscountFactor *= 1.01f;
+                    }
+                }
+
+                //System.Console.ReadLine();
             }
         }
         public static void main(string[] args)

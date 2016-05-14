@@ -61,7 +61,8 @@ namespace SmashTheCode
         public int Turn { get; set; } = 0;
         public PearlPair[] NextPairs { get; set; } = new PearlPair[8];
         public int CurrentPlayer { get; set; } = 0;
-        public Random RandomGenerator { get; set; } = new Random(); 
+        public Random RandomGenerator { get; set; } = new Random();
+        public int? Winner { get; set; } = null;
 
         public State()
         {
@@ -260,23 +261,47 @@ namespace SmashTheCode
 
         public ReinforcementLearning.Reward TakeAction(ReinforcementLearning.Action action)
         {
-            int scoreBefore = state.Players[state.CurrentPlayer].Score;
+            //int scoreBefore = state.Players[state.CurrentPlayer].Score;
             bool valid = ProcessMove(action.Rotation, action.Column);
-            if (!valid)
+            if ((state.Winner.HasValue) && (state.Winner.Value != state.CurrentPlayer))
             {
-                return new ReinforcementLearning.Reward(-100000);
+                return new ReinforcementLearning.Reward(-1);
             }
+            else if ((state.Winner.HasValue) && (state.Winner.Value == state.CurrentPlayer))
+            {
+                return new ReinforcementLearning.Reward(1);
+            }else if (!valid)
+            {
+                return new ReinforcementLearning.Reward(-1);
+            } 
             else
             {
-                int scoreAfter = state.Players[state.CurrentPlayer].Score;
+                /*int scoreAfter = state.Players[state.CurrentPlayer].Score;
                 int deltaScore = scoreAfter - scoreBefore;
-                return new ReinforcementLearning.Reward(deltaScore);
+                return new ReinforcementLearning.Reward(deltaScore);*/
+                return new ReinforcementLearning.Reward(0);
             }
         }
 
         public bool ProcessMove(int col)
         {
-            if (!DropPair(state.NextPairs[0], col)) return false;
+            state.Turn++;
+            if (state.Turn > 400)
+            {
+                if (state.Players[0].Score >= state.Players[1].Score)
+                {
+                    state.Winner = 0;
+                }else
+                {
+                    state.Winner = 1;
+                }
+                return false;
+            }
+            if (!DropPair(state.NextPairs[0], col))
+            {
+                state.Winner = (state.CurrentPlayer + 1) % 2;
+                return false;
+            }
             var newNextPairs = state.NextPairs.Skip(1).ToList();
             newNextPairs.Add(state.GetRandomPair());
             state.NextPairs = newNextPairs.ToArray();
@@ -308,7 +333,9 @@ namespace SmashTheCode
                         groupN += item.Count;
                         changesInState = true;
                         RemoveConnected(item);
-                        int bonus = (ChainPower[currentChain - 1] + ColorBonus[differentColors] + GroupBonus[groupN - 4]);
+                        int GB = groupN - 4 > 7 ? 8 : GroupBonus[groupN - 4];
+                        int CP = currentChain-1 < 10 ? 8 << (currentChain-1)-2: ChainPower[currentChain - 1];
+                        int bonus = (CP + ColorBonus[differentColors] + GB);
                         bonus = Math.Min(Math.Max(1, bonus),999);
                         stepScore += (10 * item.Count) * bonus;
                         state.Players[state.CurrentPlayer].Score += (10 * item.Count) * bonus;
@@ -395,7 +422,7 @@ namespace SmashTheCode
                     state.Players[state.CurrentPlayer].Gameboard[row - 2, col] = pair.Colors.Item1;
                     break;
                 case 0://Careful col limits
-                    if (col > 4) return false;
+                    if ((col > 4) || (row < 1))  return false;
                     state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
                     state.Players[state.CurrentPlayer].Gameboard[row - 1, col + 1] = pair.Colors.Item1;
                     break;
@@ -405,7 +432,7 @@ namespace SmashTheCode
                     state.Players[state.CurrentPlayer].Gameboard[row - 2, col] = pair.Colors.Item2;
                     break;
                 case 2://Careful col limits
-                    if (col < 1) return false;
+                    if ((col < 1) || (row < 1)) return false;
                     state.Players[state.CurrentPlayer].Gameboard[row - 1, col] = pair.Colors.Item2;
                     state.Players[state.CurrentPlayer].Gameboard[row - 1, col - 1] = pair.Colors.Item1;
                     break;

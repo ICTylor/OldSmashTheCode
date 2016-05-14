@@ -69,6 +69,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ActionTests.cs" />
     <Compile Include="EnvironmentTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PuyoConsoleTests.cs" />
