@@ -334,7 +334,7 @@ namespace SmashTheCode
                         changesInState = true;
                         RemoveConnected(item);
                         int GB = groupN - 4 > 7 ? 8 : GroupBonus[groupN - 4];
-                        int CP = currentChain-1 < 10 ? 8 << (currentChain-1)-2: ChainPower[currentChain - 1];
+                        int CP = currentChain-1 < 10 ? ChainPower[currentChain - 1] : 8 << (currentChain - 1) - 2;
                         int bonus = (CP + ColorBonus[differentColors] + GB);
                         bonus = Math.Min(Math.Max(1, bonus),999);
                         stepScore += (10 * item.Count) * bonus;
